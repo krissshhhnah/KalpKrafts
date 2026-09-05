@@ -40,3 +40,7 @@ Thumbs.db
 # NPM cache
 .npm-cache/
 **/.npm-cache/
+
+# Agent/IDE caches
+.gemini/
+**/.gemini/
