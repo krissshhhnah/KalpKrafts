@@ -7,7 +7,7 @@ import './VariableProximity.css';
 
 const robotoFlex = Roboto_Flex({ 
   subsets: ['latin'],
-  axes: ['opsz', 'wght']
+  axes: ['opsz']
 });
 
 function useAnimationFrame(callback: () => void) {
