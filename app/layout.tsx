@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Manrope, DM_Mono } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
+import { Suspense } from "react";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -35,6 +36,10 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#F5FBFD",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,6 +50,11 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakartaSans.variable} ${manrope.variable} ${dmMono.variable}`}
     >
+      <head>
+        {/* Preload hero background image so WebGL shader has it ready immediately */}
+        <link rel="preload" as="image" href="/hero_bg_new.webp" type="image/webp" />
+        <link rel="preload" as="image" href="/hero_bg_new.jpg" media="not all and (min-resolution:0.001dpcm)" />
+      </head>
       <body className="font-sans antialiased bg-[#F5FBFD] text-[#1D222D]">
         <SmoothScroll>
           {children}

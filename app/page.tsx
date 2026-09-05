@@ -440,9 +440,9 @@ export default function Home() {
           className="relative flex min-h-screen flex-col items-center justify-end pb-12 sm:pb-16 overflow-hidden bg-[#F5FBFD]"
         >
           {/* Full-Page Halftone Pattern (Static) */}
-          <div className="absolute inset-0 z-0 bg-[#F5FBFD]">
+          <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(160deg, #1a1f2e 0%, #0d1117 60%, #0A0C10 100%)' }}>
             <HalftoneReveal
-              src="/hero_bg_new.jpg"
+              src="/hero_bg_new.webp"
               inkColor="#1D222D"
               paperColor="#F5FBFD"
               mode="color"
