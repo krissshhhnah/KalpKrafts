@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: var(--font-plus-jakarta), 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-display: var(--font-manrope), 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: var(--font-dm-mono), 'DM Mono', ui-monospace, monospace;
+
+    /* ─── Brand Tokens ─── */
+    --ink:        #1D222D;
+    --blue:       #2687E8;
+    --sky:        #65C4EC;
+    --cyan:       #B9E7F1;
+    --coral:      #F05F62;
+    --cream:      #F3E7C7;
+
+    --bg-page:    #F5FBFD;
+    --bg-surface: #FFFFFF;
+    --bg-soft:    #EDF8FB;
+    --bg-dark:    #151A23;
+
+    --text-primary:   #1D222D;
+    --text-secondary: #526579;
+    --text-muted:     #8193A3;
+    --text-inverse:   #FFFFFF;
+
+    --border-default: #D8EAF1;
+    --border-strong:  #C1DDE8;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: #F5FBFD;
+    color: #1D222D;
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ─── Typography base ─── */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: #1D222D;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+
+  /* ─── Selection ─── */
+  ::selection {
+    background: rgba(38, 135, 232, 0.18);
+    color: #1D222D;
+  }
+
+  /* ─── Scrollbar ─── */
+  ::-webkit-scrollbar {
+    width: 7px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #F5FBFD;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #D8EAF1;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2687E8;
+  }
+
+  /* ─── Focus visible ─── */
+  :focus-visible {
+    outline: 2px solid #2687E8;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ─── Font Utilities ─── */
+@layer utilities {
+  .font-sans {
+    font-family: var(--font-sans);
+  }
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .font-mono-tag {
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+  }
+}
+
+/* ─── Design System Components ─── */
+@layer components {
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #1D222D 0%, #2687E8 55%, #65C4EC 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Primary pill button */
+  .gradient-pill-btn,
+  .brand-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #1D222D;
+    color: #FFFFFF !important;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: 9999px;
+    padding: 0.75rem 1.75rem;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  }
+
+  .gradient-pill-btn:hover,
+  .brand-pill-btn:hover {
+    background: #2687E8;
+    box-shadow: 0 8px 24px rgba(38, 135, 232, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* Cards */
+  .brand-card,
+  .purple-card,
+  .anthropic-card {
+    background: #FFFFFF;
+    border: 1px solid #D8EAF1;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(29, 34, 45, 0.03);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .brand-card:hover,
+  .purple-card:hover,
+  .anthropic-card:hover {
+    border-color: #2687E8;
+    box-shadow: 0 12px 32px rgba(38, 135, 232, 0.12);
+    transform: translateY(-2px);
+  }
+
+  /* Section label utility */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #2687E8;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

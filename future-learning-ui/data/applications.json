@@ -1,0 +1,28 @@
+[
+  {
+    "fullName": "Arjun Menon",
+    "email": "arjun.menon.dev@gmail.com",
+    "phone": "+91 98765 43210",
+    "location": "Bengaluru, Karnataka",
+    "university": "RV College of Engineering",
+    "degree": "B.Tech Computer Science & Engineering",
+    "gradYear": "2027",
+    "github": "https://github.com/arjunmenon",
+    "linkedin": "https://linkedin.com/in/arjunmenon",
+    "portfolio": "https://arjunmenon.dev",
+    "startDate": "2026-07-29",
+    "commitment": "Full-Time Internship (40 hrs/wk)",
+    "remotePreference": "Yes, fully comfortable remote",
+    "resumeLink": "",
+    "fileName": "Veda Learning Companion.pdf",
+    "fileSize": "0.02 MB",
+    "projectsOverview": "• Built an AI-powered Resume Analyzer using FastAPI, React, OpenAI APIs, and PostgreSQL that provides ATS scoring and personalized improvement suggestions.\r\n\r\n• Developed a Retrieval-Augmented Generation (RAG) chatbot supporting multi-document PDF search with LangChain, FAISS, SentenceTransformers, and Llama models.\r\n\r\n• Created a real-time Student ERP dashboard with analytics, attendance tracking, AI-assisted notifications, and role-based access control.\r\n\r\n• Winner of multiple university hackathons and active contributor to open-source AI and full-stack projects.",
+    "whyKalpKrafts": "KalpKrafts is building products that combine AI with education to solve meaningful real-world problems. I enjoy building scalable AI applications that have measurable impact, and the opportunity to work on innovative educational technology aligns perfectly with my interests in Generative AI, full-stack development, and product engineering. I'm excited to contribute, learn from experienced engineers, and help build products that positively influence students across India.",
+    "referralSource": "LinkedIn",
+    "roleTitle": "AI Engineer Intern",
+    "dept": "AI Research & Engineering",
+    "id": "app-1785302305044-974",
+    "status": "Shortlisted",
+    "submittedAt": "2026-07-29T05:18:25.044Z"
+  }
+]
