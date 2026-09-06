@@ -41,6 +41,7 @@ import {
   Twitter,
   Instagram,
   Star,
+  ExternalLink,
 } from "lucide-react";
 
 /* ─── DATA ─── */
@@ -292,6 +293,43 @@ export default function Home() {
     x: 0, y: 0, show: false, label: "",
   });
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [selectedMobileProduct, setSelectedMobileProduct] = useState(0);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
+
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStart(e.touches[0].clientX);
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+    if (diff > 45) {
+      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+    } else if (diff < -45) {
+      setActiveTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    }
+    setTouchStart(null);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -341,11 +379,11 @@ export default function Home() {
         transition={{ duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="fixed top-0 left-0 right-0 z-50 pointer-events-none"
       >
-        <div className="mx-auto flex w-full max-w-[90rem] items-center justify-between px-6 py-6 lg:px-8 pointer-events-auto">
+        <div className="mx-auto flex w-full max-w-[90rem] items-center justify-between px-4 sm:px-6 py-3 sm:py-5 lg:px-8 pointer-events-auto">
           {/* Left: Independent Logo */}
           <a 
             href="#" 
-            className={`shrink-0 flex items-center rounded-full px-4 py-2 transition-all duration-300 ${
+            className={`shrink-0 flex items-center rounded-full px-3.5 py-1.5 sm:px-4 sm:py-2 transition-all duration-300 ${
               scrolled 
                 ? "bg-white/90 backdrop-blur-xl border border-[#D8EAF1] shadow-lg shadow-[#D8EAF1]/50" 
                 : "bg-white/60 backdrop-blur-md border border-white/40 shadow-sm"
@@ -358,12 +396,12 @@ export default function Home() {
               height={64}
               priority
               unoptimized
-              className="h-8 lg:h-9 w-auto object-contain"
+              className="h-7 sm:h-8 lg:h-9 w-auto object-contain"
             />
           </a>
 
           {/* Right: Floating Nav Pill */}
-          <div className={`flex items-center gap-2 rounded-full p-1.5 transition-all duration-300 ${
+          <div className={`flex items-center gap-2 rounded-full p-1 sm:p-1.5 transition-all duration-300 ${
             scrolled 
               ? "bg-white/90 backdrop-blur-xl border border-[#D8EAF1] shadow-lg shadow-[#D8EAF1]/50" 
               : "bg-white/60 backdrop-blur-md border border-white/40 shadow-sm"
@@ -390,44 +428,57 @@ export default function Home() {
             </SpecularButton>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1D222D] text-white md:hidden transition-transform active:scale-95"
-              aria-label="Menu"
+              className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-[#1D222D] text-white md:hidden transition-transform active:scale-95 shadow-sm"
+              aria-label="Toggle Navigation Menu"
             >
               {mobileOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu (Floating Bubble) */}
+        {/* Mobile Menu (Floating Drawer with Backdrop Overlay) */}
         <AnimatePresence>
           {mobileOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="pointer-events-auto absolute right-6 top-24 w-64 origin-top-right rounded-3xl border border-[#D8EAF1] bg-white/95 p-4 shadow-2xl backdrop-blur-xl md:hidden"
-            >
-              <div className="flex flex-col gap-1">
-                {["Products", "Company", "Careers", "Contact"].map((item) => (
-                  <a
-                    key={item}
-                    href={`#${item.toLowerCase()}`}
-                    onClick={() => setMobileOpen(false)}
-                    className="rounded-2xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-[#1D222D] transition-colors hover:bg-[#EDF8FB]"
-                  >
-                    {item}
-                  </a>
-                ))}
-                <SpecularButton
-                  href="#contact"
-                  size="md"
-                  className="mt-2 w-full"
-                >
-                  Partner With Us <ArrowUpRight size={14} />
-                </SpecularButton>
-              </div>
-            </motion.div>
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setMobileOpen(false)}
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm pointer-events-auto md:hidden"
+              />
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.96 }}
+                transition={{ duration: 0.2 }}
+                className="pointer-events-auto absolute right-4 top-16 sm:top-20 w-[calc(100vw-2rem)] max-w-sm origin-top-right rounded-3xl border border-[#D8EAF1] bg-white/95 p-4 sm:p-5 shadow-2xl backdrop-blur-2xl z-50 md:hidden"
+              >
+                <div className="flex flex-col gap-1">
+                  {["Products", "About", "Company", "Careers", "FAQ", "Contact"].map((item) => (
+                    <a
+                      key={item}
+                      href={item === "Careers" ? "/careers" : `#${item.toLowerCase()}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-bold uppercase tracking-wider text-[#1D222D] transition-colors hover:bg-[#EDF8FB] active:bg-[#EDF8FB]"
+                    >
+                      <span>{item}</span>
+                      <ArrowRight size={14} className="text-[#2687E8]" />
+                    </a>
+                  ))}
+                  <div className="pt-2 border-t border-[#D8EAF1] mt-1">
+                    <SpecularButton
+                      href="#contact"
+                      size="md"
+                      className="w-full justify-center"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Partner With Us <ArrowUpRight size={14} />
+                    </SpecularButton>
+                  </div>
+                </div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </motion.header>
@@ -437,7 +488,7 @@ export default function Home() {
         {/* ─── 01 HERO ─── */}
         <section
           id="hero"
-          className="relative flex min-h-screen flex-col items-center justify-end pb-12 sm:pb-16 overflow-hidden bg-[#F5FBFD]"
+          className="relative flex min-h-screen flex-col items-center justify-end pb-10 sm:pb-16 overflow-hidden bg-[#F5FBFD]"
         >
           {/* Full-Page Halftone Pattern (Static) */}
           <div className="absolute inset-0 z-0" style={{ background: 'linear-gradient(160deg, #1a1f2e 0%, #0d1117 60%, #0A0C10 100%)' }}>
@@ -446,7 +497,7 @@ export default function Home() {
               inkColor="#1D222D"
               paperColor="#F5FBFD"
               mode="color"
-              dotDensity={160}
+              dotDensity={110}
               angle={45}
               contrast={1.15}
               idleReveal={0}
@@ -458,41 +509,43 @@ export default function Home() {
           </div>
 
           {/* Typography overlay (pushed to bottom by justify-end) */}
-          <div className="relative z-10 w-full max-w-[90rem] px-6 lg:px-12 text-left sm:text-center">
+          <div className="relative z-10 w-full max-w-[90rem] px-4 sm:px-6 lg:px-12 text-center sm:text-center">
             <motion.div
               variants={stagger}
               initial="hidden"
               animate="visible"
-              className="flex flex-col items-start sm:items-center"
+              className="flex flex-col items-center sm:items-center"
             >
               <motion.div
                 variants={fadeUp}
                 className="w-full max-w-[70rem] mx-auto drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)]"
               >
-                <WarpText
-                  text={`Engineering\nthe future of\nlearning.`}
-                  color="#ffffff"
-                  warpStrength={0.08}
-                  warpScale={1.7}
-                  speed={0.55}
-                  pointerInfluence={0.42}
-                  pointerStrength={0.38}
-                  refraction={0.018}
-                  ripple={true}
-                  fontSize={180}
-                  fontWeight={800}
-                  style={{ height: '500px', width: '100%' }}
-                />
+                <div className="w-full h-[250px] sm:h-[360px] lg:h-[480px] flex items-center justify-center">
+                  <WarpText
+                    text={`Engineering\nthe future of\nlearning.`}
+                    color="#ffffff"
+                    warpStrength={0.08}
+                    warpScale={1.7}
+                    speed={0.55}
+                    pointerInfluence={0.42}
+                    pointerStrength={0.38}
+                    refraction={0.018}
+                    ripple={true}
+                    fontSize={180}
+                    fontWeight={800}
+                    style={{ height: '100%', width: '100%' }}
+                  />
+                </div>
               </motion.div>
 
               <motion.p
                 variants={fadeUp}
-                className="-mt-2 sm:-mt-4 max-w-2xl text-[1.125rem] leading-[1.6] text-white font-medium sm:mx-auto drop-shadow-[0_6px_10px_rgba(0,0,0,0.6)] relative z-20 pointer-events-none"
+                className="-mt-2 sm:-mt-4 max-w-2xl text-[0.95rem] sm:text-[1.125rem] leading-[1.6] text-white/90 font-medium mx-auto drop-shadow-[0_6px_10px_rgba(0,0,0,0.6)] relative z-20 pointer-events-none px-2"
               >
                 Building intelligent educational platforms, adaptive AI companions, and real-world engineering experiences for modern institutions.
               </motion.p>
 
-              <motion.div variants={fadeUp} className="mt-10 flex flex-wrap items-center sm:justify-center gap-4 drop-shadow-[0_6px_10px_rgba(0,0,0,0.4)]">
+              <motion.div variants={fadeUp} className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-4 drop-shadow-[0_6px_10px_rgba(0,0,0,0.4)]">
                 <SpecularButton
                   href="#products"
                   size="lg"
@@ -529,9 +582,9 @@ export default function Home() {
 
 
         {/* ─── 04 PURPOSE / ABOUT ─── */}
-        <section id="about" className="py-24 lg:py-32">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
+        <section id="about" className="py-16 sm:py-24 lg:py-32">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-12 lg:gap-16 lg:grid-cols-12">
 
               {/* Left — Manifesto */}
               <motion.div
@@ -550,7 +603,7 @@ export default function Home() {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: i * 0.08 }}
-                      className="font-display text-[clamp(2.5rem,5.5vw,4.5rem)] font-extrabold leading-[1.0] tracking-[-0.04em] text-[#1D222D]"
+                      className="font-display text-[clamp(2.1rem,5.5vw,4.5rem)] font-extrabold leading-[1.0] tracking-[-0.04em] text-[#1D222D]"
                     >
                       {word === "THEORY." ? (
                         <span className="bg-gradient-to-r from-[#2687E8] to-[#65C4EC] bg-clip-text text-transparent">
@@ -568,7 +621,7 @@ export default function Home() {
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, delay: 0.4 }}
-                  className="mt-8 max-w-md text-base leading-relaxed text-[#526579]"
+                  className="mt-6 sm:mt-8 max-w-md text-sm sm:text-base leading-relaxed text-[#526579]"
                 >
                   We build technology that helps people experiment, simulate, create and understand. Education must adapt to the learner — not the other way around.
                 </motion.p>
@@ -578,12 +631,12 @@ export default function Home() {
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, delay: 0.5 }}
-                  className="mt-8 border-l-2 border-[#2687E8] pl-5"
+                  className="mt-6 sm:mt-8 border-l-2 border-[#2687E8] pl-4 sm:pl-5"
                 >
-                  <p className="text-sm font-medium text-[#1D222D] italic">
+                  <p className="text-xs sm:text-sm font-medium text-[#1D222D] italic">
                     "Technology must adapt to the learner and the institution."
                   </p>
-                  <p className="mt-1.5 font-mono-tag text-[10px] tracking-wider text-[#8193A3]">
+                  <p className="mt-1.5 font-mono-tag text-[9px] sm:text-[10px] tracking-wider text-[#8193A3]">
                     — KALPKRAFTS ENGINEERING PHILOSOPHY
                   </p>
                 </motion.div>
@@ -617,16 +670,16 @@ export default function Home() {
                   <motion.div
                     key={pillar.n}
                     variants={fadeUp}
-                    className="group flex gap-6 py-8 transition-all duration-200 hover:pl-2"
+                    className="group flex gap-4 sm:gap-6 py-6 sm:py-8 transition-all duration-200 hover:pl-2"
                   >
                     <span className="font-mono-tag mt-0.5 shrink-0 text-xs text-[#2687E8]">
                       {pillar.n}
                     </span>
                     <div>
-                      <h3 className="font-display text-lg font-bold text-[#1D222D] tracking-[-0.02em] group-hover:text-[#2687E8] transition-colors">
+                      <h3 className="font-display text-base sm:text-lg font-bold text-[#1D222D] tracking-[-0.02em] group-hover:text-[#2687E8] transition-colors">
                         {pillar.title}
                       </h3>
-                      <p className="mt-2 text-sm leading-relaxed text-[#526579]">{pillar.desc}</p>
+                      <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#526579]">{pillar.desc}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -636,23 +689,23 @@ export default function Home() {
         </section>
 
         {/* ─── 05 CAPABILITY / TRUST ─── */}
-        <section className="bg-[#1D222D] py-20">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mb-14 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <section className="bg-[#1D222D] py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-10 sm:mb-14 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <SectionLabel light>BUILT FOR REAL-WORLD LEARNING</SectionLabel>
-                <SectionHeading light className="mt-4 text-[clamp(1.75rem,3.5vw,2.5rem)]">
+                <SectionHeading light className="mt-4 text-[clamp(1.5rem,3.5vw,2.5rem)]">
                   One company. Four pillars.
                   <br />
                   <span className="text-[#65C4EC]">Infinite institutional impact.</span>
                 </SectionHeading>
               </div>
-              <p className="max-w-sm text-sm leading-relaxed text-[#B7C4D1]">
+              <p className="max-w-sm text-xs sm:text-sm leading-relaxed text-[#B7C4D1]">
                 KalpKrafts operates at the intersection of AI engineering, simulation technology, and institutional software.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
               {[
                 { label: "AI", sublabel: "Generative & Adaptive Intelligence", icon: <Brain className="h-5 w-5" /> },
                 { label: "ENGINEERING", sublabel: "Simulation & Systems Architecture", icon: <Cpu className="h-5 w-5" /> },
@@ -678,12 +731,12 @@ export default function Home() {
                     colors={['#2687E8', '#65C4EC', '#ffffff']}
                     borderRadius={24}
                   >
-                    <div className="group flex h-full flex-col gap-4 p-8">
+                    <div className="group flex h-full flex-col gap-4 p-6 sm:p-8">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-[#65C4EC] group-hover:border-[#2687E8]/30 group-hover:text-[#2687E8] transition-colors">
                         {cap.icon}
                       </div>
                       <div>
-                        <p className="font-display text-xl font-extrabold text-white tracking-[-0.02em]">
+                        <p className="font-display text-lg sm:text-xl font-extrabold text-white tracking-[-0.02em]">
                           {cap.label}
                         </p>
                         <p className="mt-1.5 text-xs leading-relaxed text-[#B7C4D1]">{cap.sublabel}</p>
@@ -697,15 +750,15 @@ export default function Home() {
         </section>
 
         {/* ─── INTERACTIVE VISION ─── */}
-        <section className="relative w-full aspect-video overflow-hidden bg-white">
-          {/* Full bleed Halftone Background maintaining 16:9 */}
+        <section className="relative w-full aspect-[16/10] sm:aspect-video overflow-hidden bg-white">
+          {/* Full bleed Halftone Background */}
           <div className="absolute inset-0 z-0">
             <HalftoneReveal
               src="/halftone_group.jpg"
               inkColor="#1D222D"
               paperColor="#F5FBFD"
               mode="color"
-              dotDensity={150}
+              dotDensity={isMobile ? 70 : 120}
               angle={28}
               revealRadius={0.25}
               borderRadius="0px"
@@ -714,19 +767,20 @@ export default function Home() {
           
           {/* Small text at the bottom */}
           <div className="pointer-events-none absolute bottom-4 left-0 right-0 z-10 flex justify-center px-4 md:bottom-8">
-            <div className="rounded-full border border-white/20 bg-white/60 px-4 py-1.5 shadow-sm backdrop-blur-md">
-              <span className="font-mono-tag tracking-widest text-[10px] text-[#1D222D] md:text-xs">
-                INTERACTIVE VISION — HOVER TO REVEAL
+            <div className="rounded-full border border-white/20 bg-white/70 px-4 py-1.5 shadow-sm backdrop-blur-md">
+              <span className="font-mono-tag tracking-widest text-[9px] text-[#1D222D] md:text-xs">
+                <span className="hidden md:inline">INTERACTIVE VISION — HOVER TO REVEAL</span>
+                <span className="inline md:hidden">INTERACTIVE VISION — TOUCH TO REVEAL</span>
               </span>
             </div>
           </div>
         </section>
 
-        {/* ─── 06 PRODUCTS (FLOWING MENU) ─── */}
-        <section id="products" className="py-24 lg:py-32 bg-[#F5FBFD]">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8 mb-16">
+        {/* ─── 06 PRODUCTS (FLOWING MENU FOR DESKTOP, INTERACTIVE SUITE FOR MOBILE) ─── */}
+        <section id="products" className="py-16 sm:py-24 lg:py-32 bg-[#F5FBFD]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-10 sm:mb-16">
             <SectionLabel>OUR ECOSYSTEM</SectionLabel>
-            <SectionHeading className="mt-4 text-[clamp(2.5rem,5vw,4.5rem)] leading-tight">
+            <SectionHeading className="mt-4 text-[clamp(2rem,5vw,4.5rem)] leading-tight">
               Technology that turns
               <br />
               <span className="bg-gradient-to-r from-[#2687E8] to-[#65C4EC] bg-clip-text text-transparent">
@@ -734,37 +788,136 @@ export default function Home() {
               </span>
             </SectionHeading>
           </div>
-          <div style={{ height: '70vh', position: 'relative' }}>
-            <FlowingMenu 
-              items={products.map(p => ({
-                link: '#',
-                text: p.name,
-                image: p.image,
-                isLive: p.status === 'Live'
-              }))} 
-              speed={15}
-              bgColor="#F5FBFD"
-              textColor="#1D222D"
-              marqueeBgColor="#2687E8"
-              marqueeTextColor="#ffffff"
-              borderColor="#D8EAF1"
-            />
+
+          {/* Desktop FlowingMenu */}
+          {!isMobile && (
+            <div className="hidden md:block" style={{ height: '70vh', position: 'relative' }}>
+              <FlowingMenu 
+                items={products.map(p => ({
+                  link: '#',
+                  text: p.name,
+                  image: p.image,
+                  isLive: p.status === 'Live'
+                }))} 
+                speed={15}
+                bgColor="#F5FBFD"
+                textColor="#1D222D"
+                marqueeBgColor="#2687E8"
+                marqueeTextColor="#ffffff"
+                borderColor="#D8EAF1"
+              />
+            </div>
+          )}
+
+          {/* Mobile Interactive Product Showcase */}
+          <div className="block md:hidden px-4 sm:px-6">
+            {/* Product Selector Tabs */}
+            <div className="flex rounded-full bg-[#EDF8FB] p-1.5 border border-[#D8EAF1] mb-6">
+              {products.map((p, idx) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedMobileProduct(idx)}
+                  className={`flex-1 rounded-full py-2.5 text-xs font-bold transition-all duration-300 ${
+                    selectedMobileProduct === idx
+                      ? "bg-[#1D222D] text-white shadow-md"
+                      : "text-[#526579] hover:text-[#1D222D]"
+                  }`}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Active Product Card */}
+            <AnimatePresence mode="wait">
+              {(() => {
+                const prod = products[selectedMobileProduct];
+                return (
+                  <motion.div
+                    key={prod.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -16 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden rounded-3xl border border-[#D8EAF1] bg-white p-5 sm:p-6 shadow-xl shadow-[#2687E8]/5"
+                  >
+                    {/* Header: domain + status */}
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                      <span className="font-mono-tag text-[10px] tracking-wider text-[#2687E8] font-bold">
+                        {prod.domain}
+                      </span>
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        prod.status === "Live"
+                          ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                          : "bg-sky-50 text-sky-600 border border-sky-200"
+                      }`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${prod.status === "Live" ? "bg-emerald-500 animate-pulse" : "bg-sky-500"}`} />
+                        {prod.status}
+                      </span>
+                    </div>
+
+                    {/* Image Preview */}
+                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-[#151A23] mb-5 border border-[#D8EAF1]/60">
+                      <Image
+                        src={prod.image}
+                        alt={prod.name}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                    </div>
+
+                    {/* Title & Tagline */}
+                    <h3 className="font-display text-2xl font-black text-[#1D222D]">
+                      {prod.name}
+                    </h3>
+                    <p className="mt-1 text-xs font-semibold text-[#2687E8]">
+                      {prod.tagline}
+                    </p>
+                    <p className="mt-2.5 text-xs leading-relaxed text-[#526579]">
+                      {prod.description}
+                    </p>
+
+                    {/* Features checklist */}
+                    <div className="mt-5 space-y-2 border-t border-[#D8EAF1] pt-4">
+                      {prod.features.map((feat, fIdx) => (
+                        <div key={fIdx} className="flex items-start gap-2.5">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-[#2687E8] mt-0.5" />
+                          <span className="text-xs text-[#1D222D] font-medium leading-snug">{feat}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Action */}
+                    <div className="mt-6 pt-2">
+                      <SpecularButton
+                        href="#contact"
+                        size="md"
+                        className="w-full justify-center"
+                      >
+                        Inquire About {prod.name} <ArrowRight size={14} />
+                      </SpecularButton>
+                    </div>
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
           </div>
         </section>
 
         {/* ─── 06 BUILT FOR ─── */}
-        <section className="border-t border-[#D8EAF1] bg-white py-24">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mb-14 grid grid-cols-1 gap-8 lg:grid-cols-2 lg:items-end">
+        <section className="border-t border-[#D8EAF1] bg-white py-16 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-10 sm:mb-14 grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-2 lg:items-end">
               <div>
                 <SectionLabel>INSTITUTIONAL COVERAGE</SectionLabel>
-                <SectionHeading className="mt-4 text-[clamp(1.75rem,3.5vw,2.75rem)]">
+                <SectionHeading className="mt-4 text-[clamp(1.5rem,3.5vw,2.75rem)]">
                   Built for every stage
                   <br />
                   of education.
                 </SectionHeading>
               </div>
-              <p className="text-base leading-relaxed text-[#526579]">
+              <p className="text-sm sm:text-base leading-relaxed text-[#526579]">
                 Engineered to support learners and institutions at every milestone — from K-12 classrooms to university campuses and government initiatives.
               </p>
             </div>
@@ -777,14 +930,14 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.45, delay: i * 0.07 }}
-                  className="group flex flex-col gap-3 rounded-2xl border border-[#D8EAF1] bg-[#F5FBFD] p-5 transition-all duration-200 hover:-translate-y-1 hover:border-[#2687E8] hover:bg-white hover:shadow-md"
+                  className="group flex flex-col gap-3 rounded-2xl border border-[#D8EAF1] bg-[#F5FBFD] p-4 sm:p-5 transition-all duration-200 hover:-translate-y-1 hover:border-[#2687E8] hover:bg-white hover:shadow-md"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#D8EAF1] bg-white text-[#2687E8] group-hover:bg-[#2687E8] group-hover:text-white transition-colors">
                     {sector.icon}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-[#1D222D]">{sector.name}</p>
-                    <p className="mt-0.5 text-[11px] text-[#8193A3]">{sector.desc}</p>
+                    <p className="text-xs sm:text-sm font-bold text-[#1D222D]">{sector.name}</p>
+                    <p className="mt-0.5 text-[10px] sm:text-[11px] text-[#8193A3]">{sector.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -795,27 +948,27 @@ export default function Home() {
         {/* ─── 07 ENGINEERING PRINCIPLES DARK SECTION ─── */}
         <section
           id="company"
-          className="overflow-hidden bg-[#151A23] py-24 lg:py-32"
+          className="overflow-hidden bg-[#151A23] py-16 sm:py-24 lg:py-32"
         >
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="mb-16 grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-10 sm:mb-16 grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-2">
               <div>
                 <SectionLabel light>COMPANY PRINCIPLES</SectionLabel>
                 <SectionHeading
                   light
-                  className="mt-4 text-[clamp(1.75rem,3.5vw,2.75rem)]"
+                  className="mt-4 text-[clamp(1.5rem,3.5vw,2.75rem)]"
                 >
                   The beliefs that shape
                   <br />
                   <span className="text-[#65C4EC]">how we build.</span>
                 </SectionHeading>
               </div>
-              <p className="flex items-center text-sm leading-relaxed text-[#B7C4D1]">
+              <p className="flex items-center text-xs sm:text-sm leading-relaxed text-[#B7C4D1]">
                 KalpKrafts is built on a set of deeply held engineering and research principles that guide every product, every decision, and every line of code.
               </p>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-6 sm:mt-8">
               <MagicBento 
                 items={principles.map(p => ({
                   label: `PRINCIPLE ${p.num}`,
@@ -837,28 +990,32 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ─── 08 TESTIMONIALS (EDITORIAL CROSSFADE) ─── */}
-        <section className="relative bg-white py-24 lg:py-32 overflow-hidden border-y border-[#D8EAF1]">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        {/* ─── 08 TESTIMONIALS (EDITORIAL CROSSFADE + TOUCH SWIPE) ─── */}
+        <section className="relative bg-white py-16 sm:py-24 lg:py-32 overflow-hidden border-y border-[#D8EAF1]">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col items-center text-center">
               <SectionLabel>WALL OF LOVE</SectionLabel>
               
-              <div className="relative mt-16 w-full max-w-4xl min-h-[320px] md:min-h-[260px] flex items-center justify-center">
+              <div 
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                className="relative mt-10 sm:mt-16 w-full max-w-4xl min-h-[260px] md:min-h-[260px] flex items-center justify-center select-none"
+              >
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={activeTestimonial}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="flex flex-col items-center w-full"
+                    exit={{ opacity: 0, y: -15 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="flex flex-col items-center w-full px-2"
                   >
-                    <p className="font-display text-[clamp(1.5rem,3vw,2.25rem)] font-bold text-[#1D222D] leading-[1.3] tracking-[-0.01em]">
+                    <p className="font-display text-[clamp(1.15rem,3.5vw,2.25rem)] font-bold text-[#1D222D] leading-[1.35] tracking-[-0.01em]">
                       "{testimonials[activeTestimonial].text}"
                     </p>
                     
-                    <div className="mt-10 flex items-center gap-4">
-                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-[#D8EAF1]">
+                    <div className="mt-8 sm:mt-10 flex items-center gap-3 sm:gap-4">
+                      <div className="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0 overflow-hidden rounded-full border-2 border-[#D8EAF1]">
                         <Image 
                           src={testimonials[activeTestimonial].avatar} 
                           alt={testimonials[activeTestimonial].name} 
@@ -868,7 +1025,7 @@ export default function Home() {
                         />
                       </div>
                       <div className="text-left">
-                        <p className="font-bold text-[#1D222D]">{testimonials[activeTestimonial].name}</p>
+                        <p className="font-bold text-sm sm:text-base text-[#1D222D]">{testimonials[activeTestimonial].name}</p>
                         <div className="flex items-center gap-1.5 text-xs text-[#526579] mt-0.5">
                           {testimonials[activeTestimonial].platform === "twitter" && <Twitter size={12} className="text-[#2687E8]" />}
                           {testimonials[activeTestimonial].platform === "instagram" && <Instagram size={12} className="text-[#F05F62]" />}
@@ -882,16 +1039,18 @@ export default function Home() {
               </div>
 
               {/* Navigation Indicators */}
-              <div className="mt-12 flex items-center justify-center gap-3">
+              <div className="mt-8 sm:mt-12 flex items-center justify-center gap-1 sm:gap-2">
                 {testimonials.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setActiveTestimonial(idx)}
-                    className={`h-2 transition-all duration-300 rounded-full ${
-                      idx === activeTestimonial ? "w-8 bg-[#2687E8]" : "w-2 bg-[#D8EAF1] hover:bg-[#8193A3]"
-                    }`}
+                    className="p-2 flex items-center justify-center"
                     aria-label={`Go to testimonial ${idx + 1}`}
-                  />
+                  >
+                    <span className={`h-2 transition-all duration-300 rounded-full block ${
+                      idx === activeTestimonial ? "w-8 bg-[#2687E8]" : "w-2 bg-[#D8EAF1] hover:bg-[#8193A3]"
+                    }`} />
+                  </button>
                 ))}
               </div>
             </div>
@@ -899,14 +1058,14 @@ export default function Home() {
         </section>
 
         {/* ─── 09 LEADERSHIP ─── */}
-        <section id="leadership" className="py-24 lg:py-32">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <section id="leadership" className="py-16 sm:py-24 lg:py-32">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.65 }}
-              className="mb-16"
+              className="mb-10 sm:mb-16"
             >
               <SectionLabel>OUR TEAM</SectionLabel>
               <SectionHeading className="mt-4 text-[clamp(1.75rem,3.5vw,2.75rem)]">
@@ -924,7 +1083,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: i * 0.12 }}
-                  className="group relative overflow-hidden rounded-[2rem] aspect-square bg-[#151A23] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(38,135,232,0.4)]"
+                  className="group relative overflow-hidden rounded-[2rem] aspect-[4/5] sm:aspect-square bg-[#151A23] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(38,135,232,0.4)]"
                 >
                   {/* Full Background Image */}
                   <Image
@@ -935,8 +1094,8 @@ export default function Home() {
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
 
-                  {/* Halftone Image Overlay (Fades in on hover, no glass reveal) */}
-                  <div className="absolute inset-0 opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-105">
+                  {/* Halftone Image Overlay (Desktop hover only - saves 2 WebGL contexts on mobile) */}
+                  <div className="hidden md:block absolute inset-0 opacity-0 transition-all duration-700 ease-out group-hover:opacity-100 group-hover:scale-105">
                     <HalftoneReveal
                       src={member.image}
                       trigger="off"
@@ -950,31 +1109,31 @@ export default function Home() {
                     />
                   </div>
 
-                  {/* Base Gradient Overlay (Always visible for name legibility) */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B0E14]/90 via-[#0B0E14]/10 via-25% to-transparent to-50%" />
+                  {/* Base Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B0E14]/95 via-[#0B0E14]/30 via-40% to-transparent to-60%" />
 
-                  {/* Darker Gradient Overlay (Deepens on hover for description legibility) */}
+                  {/* Darker Gradient Overlay for desktop hover */}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0B0E14]/95 via-[#0B0E14]/60 via-35% to-transparent to-60% opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-                  {/* Content Container (Anchored to bottom, expands upward on hover) */}
-                  <div className="absolute inset-x-0 bottom-0 p-8 flex flex-col justify-end">
+                  {/* Content Container (Anchored to bottom) */}
+                  <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 flex flex-col justify-end">
                     <div className="flex items-end justify-between gap-4">
                       <div>
-                        <h3 className="font-display text-3xl font-bold text-white tracking-[-0.02em]">
+                        <h3 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-[-0.02em]">
                           {member.name}
                         </h3>
-                        <p className="mt-1 font-mono-tag text-xs tracking-wider text-[#65C4EC]">
+                        <p className="mt-1 font-mono-tag text-[11px] sm:text-xs tracking-wider text-[#65C4EC]">
                           {member.subtitle.toUpperCase()}
                         </p>
                       </div>
                       
-                      {/* Socials (Fades in on hover) */}
-                      <div className="flex items-center gap-2 shrink-0 mb-1 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                      {/* Socials (Visible on mobile, expands on desktop hover) */}
+                      <div className="flex items-center gap-2 shrink-0 mb-1 opacity-100 md:opacity-0 md:transition-opacity md:duration-500 md:group-hover:opacity-100">
                         <a
                           href={member.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all duration-300 hover:bg-[#2687E8] hover:text-white"
+                          className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-all duration-300 hover:bg-[#2687E8] hover:text-white"
                           aria-label={`${member.name} LinkedIn`}
                         >
                           <Linkedin size={16} />
@@ -983,7 +1142,7 @@ export default function Home() {
                           href={member.github}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-[#1D222D]"
+                          className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-[#1D222D]"
                           aria-label={`${member.name} GitHub`}
                         >
                           <Github size={16} />
@@ -991,11 +1150,11 @@ export default function Home() {
                       </div>
                     </div>
 
-                    {/* Description (Height expands from 0 to auto on hover) */}
-                    <div className="grid grid-rows-[0fr] transition-all duration-500 ease-out group-hover:grid-rows-[1fr] mt-0 group-hover:mt-6">
+                    {/* Description (Visible on mobile, expands on desktop hover) */}
+                    <div className="grid grid-rows-[1fr] md:grid-rows-[0fr] transition-all duration-500 ease-out md:group-hover:grid-rows-[1fr] mt-3 sm:mt-0 md:group-hover:mt-6">
                       <div className="overflow-hidden">
-                        <div className="border-t border-white/20 pt-5">
-                          <p className="text-[15px] leading-relaxed text-[#B7C4D1] opacity-0 transition-opacity duration-700 delay-100 group-hover:opacity-100">
+                        <div className="border-t border-white/20 pt-3 sm:pt-5">
+                          <p className="text-xs sm:text-[15px] leading-relaxed text-[#B7C4D1] opacity-100 md:opacity-0 md:transition-opacity md:duration-700 md:delay-100 md:group-hover:opacity-100 line-clamp-3 sm:line-clamp-none">
                             {member.desc}
                           </p>
                         </div>
@@ -1009,9 +1168,9 @@ export default function Home() {
         </section>
 
         {/* ─── 10 CAREERS CTA ─── */}
-        <section id="careers" className="relative flex flex-col lg:flex-row overflow-hidden bg-[#1D222D] min-h-[60vh] lg:min-h-[70vh] items-center">
+        <section id="careers" className="relative flex flex-col lg:flex-row overflow-hidden bg-[#1D222D] min-h-[50vh] lg:min-h-[70vh] items-center">
           {/* Left — Text */}
-          <div className="relative z-10 flex w-full flex-col justify-center px-6 py-20 lg:w-1/2 lg:px-12 xl:px-20 lg:py-28">
+          <div className="relative z-10 flex w-full flex-col justify-center px-4 sm:px-6 py-14 sm:py-20 lg:w-1/2 lg:px-12 xl:px-20 lg:py-28">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1020,24 +1179,24 @@ export default function Home() {
               className="mx-auto w-full max-w-xl lg:mx-0"
             >
               <SectionLabel light>INTERNSHIPS & CONTRIBUTORS</SectionLabel>
-              <SectionHeading light className="mt-4 text-[clamp(1.75rem,3.5vw,2.5rem)]">
+              <SectionHeading light className="mt-4 text-[clamp(1.5rem,3.5vw,2.5rem)]">
                 Contribute & build the
                 <br />
                 future of education.
               </SectionHeading>
-              <p className="mt-5 max-w-md text-base leading-relaxed text-[#B7C4D1]">
+              <p className="mt-4 sm:mt-5 max-w-md text-xs sm:text-base leading-relaxed text-[#B7C4D1]">
                 We're inviting passionate student researchers, intern developers, and open-source contributors to work directly with our founders on core AI initiatives.
               </p>
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="mt-6 sm:mt-8 flex flex-wrap gap-3 sm:gap-4">
                 <a
                   href="/careers"
-                  className="inline-flex items-center gap-2 rounded-full bg-[#2687E8] px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#1476D2] hover:shadow-lg hover:shadow-[#2687E8]/30"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#2687E8] px-6 sm:px-7 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-white transition-all hover:bg-[#1476D2] hover:shadow-lg hover:shadow-[#2687E8]/30"
                 >
                   View Open Roles <ArrowRight size={14} />
                 </a>
                 <a
                   href="#contact"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white/80 transition-all hover:border-white/30 hover:text-white"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 px-6 sm:px-7 py-3 sm:py-3.5 text-xs sm:text-sm font-semibold text-white/80 transition-all hover:border-white/30 hover:text-white"
                 >
                   Talk to Us
                 </a>
@@ -1046,7 +1205,7 @@ export default function Home() {
           </div>
 
           {/* Right — Full Bleed Image with Blur Transition */}
-          <div className="relative w-full h-[50vh] lg:absolute lg:inset-y-0 lg:right-0 lg:h-full lg:w-1/2">
+          <div className="relative w-full h-[35vh] sm:h-[45vh] lg:absolute lg:inset-y-0 lg:right-0 lg:h-full lg:w-1/2">
             <motion.div
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -1054,7 +1213,6 @@ export default function Home() {
               transition={{ duration: 1, delay: 0.2 }}
               className="absolute inset-0"
             >
-              {/* Soft gradient stretch blending into the dark text half */}
               <div className="pointer-events-none absolute inset-y-0 left-0 w-full bg-gradient-to-t lg:bg-gradient-to-r from-[#1D222D] via-[#1D222D]/80 to-transparent lg:w-48 z-10" />
               
               <Image
@@ -1069,19 +1227,19 @@ export default function Home() {
         </section>
 
         {/* ─── 11 FAQ ─── */}
-        <section id="faq" className="py-20 lg:py-28">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-16 lg:grid-cols-12">
+        <section id="faq" className="py-16 sm:py-20 lg:py-28">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
               <div className="lg:col-span-4">
                 <SectionLabel>FAQ</SectionLabel>
-                <SectionHeading className="mt-4 text-[clamp(2rem,4vw,3rem)]">
+                <SectionHeading className="mt-4 text-[clamp(1.75rem,4vw,3rem)]">
                   Everything
                   <br />
                   you need
                   <br />
                   to know.
                 </SectionHeading>
-                <p className="mt-5 text-sm leading-relaxed text-[#526579]">
+                <p className="mt-4 sm:mt-5 text-xs sm:text-sm leading-relaxed text-[#526579]">
                   Have questions about implementation, security, or platform capabilities?
                 </p>
               </div>
@@ -1093,19 +1251,19 @@ export default function Home() {
                     <div key={fIdx}>
                       <button
                         onClick={() => setOpenFaq(isOpen ? null : fIdx)}
-                        className="flex w-full items-start justify-between gap-6 py-6 text-left"
+                        className="flex w-full items-start justify-between gap-4 py-5 text-left"
                       >
-                        <span className="text-base font-semibold text-[#1D222D] leading-snug">
+                        <span className="text-sm sm:text-base font-semibold text-[#1D222D] leading-snug">
                           {faq.q}
                         </span>
                         <div
-                          className={`mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
+                          className={`mt-1 flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-200 ${
                             isOpen
                               ? "rotate-180 border-[#2687E8] bg-[#2687E8] text-white"
                               : "border-[#D8EAF1] bg-white text-[#526579]"
                           }`}
                         >
-                          <ChevronDown size={15} />
+                          <ChevronDown size={14} />
                         </div>
                       </button>
                       <AnimatePresence initial={false}>
@@ -1117,7 +1275,7 @@ export default function Home() {
                             transition={{ duration: 0.28 }}
                             className="overflow-hidden"
                           >
-                            <p className="pb-6 text-sm leading-relaxed text-[#526579]">
+                            <p className="pb-5 text-xs sm:text-sm leading-relaxed text-[#526579]">
                               {faq.a}
                             </p>
                           </motion.div>
@@ -1131,12 +1289,10 @@ export default function Home() {
           </div>
         </section>
 
-
-
         {/* ─── 12 CONTACT FORM ─── */}
-        <section id="contact" className="py-24 lg:py-32">
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-16 lg:grid-cols-2">
+        <section id="contact" className="py-16 sm:py-24 lg:py-32">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
               <motion.div
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -1144,17 +1300,16 @@ export default function Home() {
                 transition={{ duration: 0.65 }}
               >
                 <SectionLabel>GET IN TOUCH</SectionLabel>
-                <SectionHeading className="mt-4 text-[clamp(1.75rem,3.5vw,2.75rem)]">
+                <SectionHeading className="mt-4 text-[clamp(1.5rem,3.5vw,2.75rem)]">
                   Let's give your institution
                   <br />
                   <span className="bg-gradient-to-r from-[#2687E8] to-[#65C4EC] bg-clip-text text-transparent">
                     infinite AI capability.
                   </span>
                 </SectionHeading>
-                <p className="mt-5 max-w-md text-base leading-relaxed text-[#526579]">
+                <p className="mt-4 sm:mt-5 max-w-md text-xs sm:text-base leading-relaxed text-[#526579]">
                   Ready to deploy Pragati, explore R&D simulator labs, or build custom AI learning infrastructure? Submit your inquiry below and our team will respond within 24 hours.
                 </p>
-
               </motion.div>
 
               {/* Form */}
@@ -1170,20 +1325,20 @@ export default function Home() {
                       key="success"
                       initial={{ opacity: 0, scale: 0.97 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="flex flex-col items-center rounded-2xl border border-emerald-200 bg-emerald-50 p-12 text-center"
+                      className="flex flex-col items-center rounded-2xl border border-emerald-200 bg-emerald-50 p-8 sm:p-12 text-center"
                     >
-                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                        <CheckCircle2 size={28} />
+                      <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                        <CheckCircle2 size={26} />
                       </div>
-                      <h3 className="font-display mt-4 text-xl font-bold text-[#1D222D]">
+                      <h3 className="font-display mt-4 text-lg sm:text-xl font-bold text-[#1D222D]">
                         Inquiry Received
                       </h3>
-                      <p className="mt-2 text-sm text-[#526579]">
+                      <p className="mt-2 text-xs sm:text-sm text-[#526579]">
                         Our team will respond within 24 hours.
                       </p>
                       <button
                         onClick={() => setContactSubmitted(false)}
-                        className="mt-6 rounded-full border border-[#D8EAF1] bg-white px-6 py-2.5 text-sm font-medium text-[#526579] hover:border-[#2687E8] hover:text-[#2687E8] transition-colors"
+                        className="mt-6 rounded-full border border-[#D8EAF1] bg-white px-6 py-2.5 text-xs sm:text-sm font-medium text-[#526579] hover:border-[#2687E8] hover:text-[#2687E8] transition-colors"
                       >
                         Submit Another Inquiry
                       </button>
@@ -1194,16 +1349,15 @@ export default function Home() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       onSubmit={handleContactSubmit}
-                      className="group relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#2687E8] to-[#1476D2] p-10 shadow-[0_40px_80px_-20px_rgba(38,135,232,0.4)]"
+                      className="group relative overflow-hidden rounded-3xl sm:rounded-[2.5rem] bg-gradient-to-br from-[#2687E8] to-[#1476D2] p-6 sm:p-10 shadow-[0_40px_80px_-20px_rgba(38,135,232,0.4)]"
                     >
                       {/* Decorative Background Elements */}
                       <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-[#65C4EC] blur-[80px] opacity-50 transition-transform duration-700 group-hover:scale-110" />
-                      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
 
-                      <div className="relative z-10 space-y-7">
-                        <div className="grid grid-cols-1 gap-7 sm:grid-cols-2">
+                      <div className="relative z-10 space-y-5 sm:space-y-7">
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-7">
                           <div>
-                            <label className="mb-2.5 block font-mono-tag text-[11px] font-semibold tracking-[0.08em] text-white/80">
+                            <label className="mb-2 block font-mono-tag text-[10px] sm:text-[11px] font-semibold tracking-[0.08em] text-white/80">
                               YOUR NAME <span className="text-white">*</span>
                             </label>
                             <input
@@ -1212,11 +1366,11 @@ export default function Home() {
                               placeholder="e.g. Dr. Rajesh Sharma"
                               value={contactForm.name}
                               onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                              className="w-full rounded-[1.25rem] border border-white/20 bg-white/10 px-5 py-4 text-[15px] text-white placeholder-white/60 shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
+                              className="w-full rounded-[1.25rem] border border-white/20 bg-white/10 px-4 sm:px-5 py-3.5 sm:py-4 text-base text-white placeholder-white/60 shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
                             />
                           </div>
                           <div>
-                            <label className="mb-2.5 block font-mono-tag text-[11px] font-semibold tracking-[0.08em] text-white/80">
+                            <label className="mb-2 block font-mono-tag text-[10px] sm:text-[11px] font-semibold tracking-[0.08em] text-white/80">
                               EMAIL ADDRESS <span className="text-white">*</span>
                             </label>
                             <input
@@ -1225,13 +1379,13 @@ export default function Home() {
                               placeholder="rajesh@institution.edu"
                               value={contactForm.email}
                               onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                              className="w-full rounded-[1.25rem] border border-white/20 bg-white/10 px-5 py-4 text-[15px] text-white placeholder-white/60 shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
+                              className="w-full rounded-[1.25rem] border border-white/20 bg-white/10 px-4 sm:px-5 py-3.5 sm:py-4 text-base text-white placeholder-white/60 shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
                             />
                           </div>
                         </div>
 
                         <div>
-                          <label className="mb-2.5 block font-mono-tag text-[11px] font-semibold tracking-[0.08em] text-white/80">
+                          <label className="mb-2 block font-mono-tag text-[10px] sm:text-[11px] font-semibold tracking-[0.08em] text-white/80">
                             INSTITUTION / COMPANY
                           </label>
                           <input
@@ -1239,22 +1393,22 @@ export default function Home() {
                             placeholder="e.g. Apex Institute of Technology"
                             value={contactForm.org}
                             onChange={(e) => setContactForm({ ...contactForm, org: e.target.value })}
-                            className="w-full rounded-[1.25rem] border border-white/20 bg-white/10 px-5 py-4 text-[15px] text-white placeholder-white/60 shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
+                            className="w-full rounded-[1.25rem] border border-white/20 bg-white/10 px-4 sm:px-5 py-3.5 sm:py-4 text-base text-white placeholder-white/60 shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
                           />
                         </div>
 
                         <div>
-                          <label className="mb-2.5 block font-mono-tag text-[11px] font-semibold tracking-[0.08em] text-white/80">
+                          <label className="mb-2 block font-mono-tag text-[10px] sm:text-[11px] font-semibold tracking-[0.08em] text-white/80">
                             INSTITUTION TYPE
                           </label>
                           <div className="relative">
                             <button
                               type="button"
                               onClick={() => setIsSelectOpen(!isSelectOpen)}
-                              className="flex w-full items-center justify-between rounded-[1.25rem] border border-white/20 bg-white/10 px-5 py-4 text-left text-[15px] text-white shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
+                              className="flex w-full items-center justify-between rounded-[1.25rem] border border-white/20 bg-white/10 px-4 sm:px-5 py-3.5 sm:py-4 text-left text-base text-white shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
                             >
-                              <span>{contactForm.type}</span>
-                              <ChevronDown className={`h-4 w-4 text-white/70 transition-transform duration-300 ${isSelectOpen ? "rotate-180" : ""}`} />
+                              <span className="truncate">{contactForm.type}</span>
+                              <ChevronDown className={`h-4 w-4 shrink-0 text-white/70 transition-transform duration-300 ${isSelectOpen ? "rotate-180" : ""}`} />
                             </button>
                             
                             <AnimatePresence>
@@ -1264,7 +1418,7 @@ export default function Home() {
                                   animate={{ opacity: 1, y: 0, scale: 1 }}
                                   exit={{ opacity: 0, y: -10, scale: 0.98 }}
                                   transition={{ duration: 0.2 }}
-                                  className="absolute left-0 right-0 top-full mt-2 z-50 overflow-hidden rounded-[1.25rem] border border-white/20 bg-[#1D222D]/95 backdrop-blur-xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]"
+                                  className="absolute left-0 right-0 top-full mt-2 z-50 overflow-hidden rounded-[1.25rem] border border-white/20 bg-[#1D222D]/95 backdrop-blur-xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] max-h-60 overflow-y-auto"
                                 >
                                   {[
                                     "K-12 School Network",
@@ -1281,7 +1435,7 @@ export default function Home() {
                                         setContactForm({ ...contactForm, type });
                                         setIsSelectOpen(false);
                                       }}
-                                      className={`block w-full px-5 py-3.5 text-left text-[14px] transition-colors ${
+                                      className={`block w-full px-5 py-3 text-left text-[14px] transition-colors ${
                                         contactForm.type === type 
                                           ? "bg-[#2687E8]/40 text-white font-medium" 
                                           : "text-white/70 hover:bg-white/10 hover:text-white"
@@ -1297,7 +1451,7 @@ export default function Home() {
                         </div>
 
                         <div>
-                          <label className="mb-2.5 block font-mono-tag text-[11px] font-semibold tracking-[0.08em] text-white/80">
+                          <label className="mb-2 block font-mono-tag text-[10px] sm:text-[11px] font-semibold tracking-[0.08em] text-white/80">
                             PROJECT / INQUIRY DETAILS
                           </label>
                           <textarea
@@ -1305,7 +1459,7 @@ export default function Home() {
                             placeholder="Tell us about your institution's goals..."
                             value={contactForm.message}
                             onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                            className="w-full resize-none rounded-[1.25rem] border border-white/20 bg-white/10 px-5 py-4 text-[15px] text-white placeholder-white/60 shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
+                            className="w-full resize-none rounded-[1.25rem] border border-white/20 bg-white/10 px-4 sm:px-5 py-3.5 sm:py-4 text-base text-white placeholder-white/60 shadow-sm transition-all duration-300 hover:bg-white/20 focus:border-white focus:bg-white/20 focus:shadow-[0_0_0_4px_rgba(255,255,255,0.2)] focus:outline-none"
                           />
                         </div>
 
@@ -1313,7 +1467,7 @@ export default function Home() {
                           <button
                             type="submit"
                             disabled={contactLoading}
-                            className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-bold text-[#2687E8] shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl hover:bg-white/90 focus:outline-none disabled:opacity-70 disabled:hover:scale-100"
+                            className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-6 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-sm font-bold text-[#2687E8] shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl hover:bg-white/90 focus:outline-none disabled:opacity-70 disabled:hover:scale-100"
                           >
                             {contactLoading ? "Sending..." : "Send Partnership Inquiry"}
                             {!contactLoading && <Send size={15} />}
@@ -1331,9 +1485,9 @@ export default function Home() {
       </main>
 
       {/* ─── FOOTER (PRESERVED) ─── */}
-      <footer className="relative overflow-hidden border-t border-[#2687E8]/20 bg-[#151A23] pt-16 pb-0 text-slate-400">
-        <div className="relative z-10 mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8 pb-16">
+      <footer className="relative overflow-hidden border-t border-[#2687E8]/20 bg-[#151A23] pt-12 sm:pt-16 pb-0 text-slate-400">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8 pb-12 sm:pb-16">
             <div className="flex flex-col items-start lg:col-span-4">
               <a href="#" className="flex items-center shrink-0">
                 <Image
@@ -1342,14 +1496,14 @@ export default function Home() {
                   width={260}
                   height={80}
                   unoptimized
-                  className="h-9 sm:h-10 w-auto object-contain transition-transform duration-300 hover:scale-105 filter brightness-0 invert"
+                  className="h-8 sm:h-10 w-auto object-contain transition-transform duration-300 hover:scale-105 filter brightness-0 invert"
                 />
               </a>
-              <p className="mt-6 text-xs leading-relaxed text-slate-400 max-w-xs">
+              <p className="mt-4 sm:mt-6 text-xs leading-relaxed text-slate-400 max-w-xs">
                 © copyright KalpKrafts 2025. All rights reserved.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-7 lg:col-start-6">
+            <div className="grid grid-cols-2 gap-6 sm:gap-8 sm:grid-cols-3 lg:col-span-7 lg:col-start-6">
               {[
                 {
                   title: "Pages",

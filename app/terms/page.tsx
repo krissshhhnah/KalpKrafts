@@ -8,8 +8,8 @@ import { ArrowLeft, FileText } from "lucide-react";
 export default function TermsPage() {
   return (
     <div className="relative min-h-screen w-full bg-[#F0F7FF] text-[#0A2540] selection:bg-[#0099FF]/30">
-      <header className="fixed top-3 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-white/80 bg-white/75 px-5 py-2.5 backdrop-blur-2xl shadow-lg shadow-[#007BFF]/10">
+      <header className="fixed top-3 left-0 right-0 z-50 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-white/80 bg-white/75 px-3.5 sm:px-5 py-2 sm:py-2.5 backdrop-blur-2xl shadow-lg shadow-[#007BFF]/10">
           <Link href="/" className="flex items-center shrink-0">
             <Image
               src="/kalpkrafts_logo.png"
@@ -17,22 +17,22 @@ export default function TermsPage() {
               width={260}
               height={80}
               unoptimized
-              className="h-8 sm:h-9 w-auto object-contain"
+              className="h-7 sm:h-9 w-auto object-contain"
             />
           </Link>
-          <Link href="/" className="gradient-pill-btn px-5 py-2 text-xs font-semibold inline-flex items-center gap-1.5">
-            <ArrowLeft size={14} /> Back to Main Site
+          <Link href="/" className="gradient-pill-btn px-3.5 sm:px-5 py-2 text-xs font-semibold inline-flex items-center gap-1.5">
+            <ArrowLeft size={14} /> <span className="hidden sm:inline">Back to Main Site</span><span className="sm:hidden">Back</span>
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 pt-32 pb-24">
-        <div className="rounded-3xl border border-[#BEE3F8] bg-white p-8 sm:p-12 shadow-xl">
+      <main className="mx-auto max-w-4xl px-4 sm:px-6 pt-24 sm:pt-32 pb-16 sm:pb-24">
+        <div className="rounded-3xl border border-[#BEE3F8] bg-white p-5 sm:p-8 md:p-12 shadow-xl">
           <div className="flex items-center gap-3 mb-4">
             <FileText size={28} className="text-[#007BFF]" />
             <span className="text-xs font-extrabold uppercase tracking-widest text-[#007BFF]">LEGAL & TERMS</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-[#0A2540] sm:text-4xl">Terms of Service</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#0A2540] md:text-4xl">Terms of Service</h1>
           <p className="mt-2 text-xs text-[#334E68]">Last updated: January 2025</p>
 
           <div className="mt-8 space-y-6 text-sm leading-relaxed text-[#334E68]">

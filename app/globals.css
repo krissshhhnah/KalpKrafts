@@ -87,9 +87,21 @@
     outline-offset: 2px;
     border-radius: 4px;
   }
+
+  /* ─── Mobile iOS input zoom prevention ─── */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* ─── Touch tap highlight ─── */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
-/* ─── Font Utilities ─── */
+/* ─── Font & Mobile Utilities ─── */
 @layer utilities {
   .font-sans {
     font-family: var(--font-sans);
@@ -100,6 +112,13 @@
   .font-mono-tag {
     font-family: var(--font-mono);
     letter-spacing: 0.1em;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 

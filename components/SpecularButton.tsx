@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, ReactNode } from 'react';
+import { useRef, useEffect, useState, ReactNode } from 'react';
 import { Renderer, Program, Mesh, Triangle, Color } from 'ogl';
 import './SpecularButton.css';
 
@@ -115,6 +115,7 @@ const SpecularButton = ({
 }: SpecularButtonProps) => {
   const btnRef = useRef<HTMLElement>(null);
   const fxRef = useRef<HTMLSpanElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const propsRef = useRef({ radius, lineColor, baseColor, intensity, shineSize, shineFade, thickness, speed, followMouse, proximity, autoAnimate });
 
   useEffect(() => {
@@ -122,16 +123,37 @@ const SpecularButton = ({
   }, [radius, lineColor, baseColor, intensity, shineSize, shineFade, thickness, speed, followMouse, proximity, autoAnimate]);
 
   useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768 || (typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches);
+      setIsMobile(mobile);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) return;
     const btn = btnRef.current;
     const fx = fxRef.current;
     if (!btn || !fx) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    const renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr });
-    const gl = renderer.gl;
-    gl.clearColor(0, 0, 0, 0);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    let gl: any;
+    let renderer: any;
+    let ro: ResizeObserver;
+    let raf = 0;
+
+    try {
+      const dpr = window.devicePixelRatio || 1;
+      renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr });
+      gl = renderer.gl;
+      gl.clearColor(0, 0, 0, 0);
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    } catch (e) {
+      console.warn("SpecularButton: WebGL unavailable or limit reached", e);
+      return;
+    }
 
     const geometry = new Triangle(gl);
     if (geometry.attributes.uv) delete geometry.attributes.uv;
@@ -144,14 +166,14 @@ const SpecularButton = ({
         uHalfSize: { value: [1, 1] },
         uRadius: { value: 0 },
         uAngle: { value: 2.4 },
-        uPx: { value: dpr },
+        uPx: { value: window.devicePixelRatio || 1 },
         uLineColor: { value: [1, 1, 1] },
         uBaseColor: { value: [0.32, 0.32, 0.32] },
         uIntensity: { value: 1 },
         uShineSize: { value: 0.17 },
         uShineFade: { value: 0.7 },
         uThickness: { value: 1 },
-        uBaseWidth: { value: dpr }
+        uBaseWidth: { value: window.devicePixelRatio || 1 }
       }
     });
 
@@ -159,6 +181,7 @@ const SpecularButton = ({
     fx.appendChild(gl.canvas);
 
     const sizeRef = { w: 1, h: 1 };
+    const dpr = window.devicePixelRatio || 1;
     const resize = (w: number, h: number) => {
       if (w === 0 || h === 0) return;
       sizeRef.w = w;
@@ -168,7 +191,7 @@ const SpecularButton = ({
       program.uniforms.uHalfSize.value = [(w / 2) * dpr, (h / 2) * dpr];
     };
     
-    const ro = new ResizeObserver((entries) => {
+    ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
         let w = entry.borderBoxSize?.[0]?.inlineSize;
         let h = entry.borderBoxSize?.[0]?.blockSize;
@@ -207,7 +230,6 @@ const SpecularButton = ({
     let idleAngle = 2.4;
     let bright = 0;
     let last = performance.now();
-    let raf = 0;
 
     const lineC = new Color();
     const baseC = new Color();
@@ -243,12 +265,12 @@ const SpecularButton = ({
 
     return () => {
       cancelAnimationFrame(raf);
-      ro.disconnect();
+      ro?.disconnect();
       window.removeEventListener('pointermove', onPointerMove);
-      if (gl.canvas.parentNode === fx) fx.removeChild(gl.canvas);
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      if (gl?.canvas?.parentNode === fx) fx.removeChild(gl.canvas);
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
     };
-  }, []);
+  }, [isMobile]);
 
   const Component = href ? 'a' : 'button';
   const tagProps = href ? { href } : { type, disabled };
@@ -258,7 +280,7 @@ const SpecularButton = ({
       ref={btnRef as any}
       onClick={onClick as any}
       {...tagProps}
-      className={`specular-button specular-button--${size}${className ? ` ${className}` : ''}`}
+      className={`specular-button specular-button--${size}${isMobile ? ' specular-button--mobile' : ''}${className ? ` ${className}` : ''}`}
       style={{
         '--sb-radius': `${radius}px`,
         '--sb-tint': tint,
@@ -267,7 +289,7 @@ const SpecularButton = ({
         '--sb-text-color': textColor
       } as React.CSSProperties}
     >
-      <span ref={fxRef} className="specular-button__fx" aria-hidden="true" />
+      {!isMobile && <span ref={fxRef} className="specular-button__fx" aria-hidden="true" />}
       <span className="specular-button__label">{children}</span>
     </Component>
   );

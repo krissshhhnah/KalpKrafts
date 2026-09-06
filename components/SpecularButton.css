@@ -89,3 +89,25 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Mobile & Touch optimized styling (zero WebGL overhead) */
+.specular-button--mobile {
+  border: 1px solid rgba(101, 196, 236, 0.45);
+  background: linear-gradient(145deg, #1D222D 0%, #151A23 100%);
+  box-shadow: 0 4px 20px rgba(38, 135, 232, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.specular-button--mobile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 0%, rgba(101, 196, 236, 0.35) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.specular-button--mobile:active {
+  background: #2687E8;
+  box-shadow: 0 2px 10px rgba(38, 135, 232, 0.4);
+}

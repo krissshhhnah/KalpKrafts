@@ -84,10 +84,14 @@ function MenuItem({ link, text, image, isLive = true, speed, textColor, marqueeB
       if (!marqueeContent) return;
 
       const contentWidth = marqueeContent.offsetWidth;
-      const viewportWidth = window.innerWidth;
+      // If element is hidden (e.g. display: none on mobile) or has 0 width, don't divide by zero
+      if (!contentWidth || contentWidth <= 0) return;
 
+      const viewportWidth = window.innerWidth || 1200;
       const needed = Math.ceil(viewportWidth / contentWidth) + 2;
-      setRepetitions(Math.max(4, needed));
+      if (Number.isFinite(needed) && needed > 0) {
+        setRepetitions(Math.min(Math.max(4, Math.floor(needed)), 20));
+      }
     };
 
     calculateRepetitions();
@@ -103,7 +107,7 @@ function MenuItem({ link, text, image, isLive = true, speed, textColor, marqueeB
       if (!marqueeContent) return;
 
       const contentWidth = marqueeContent.offsetWidth;
-      if (contentWidth === 0) return;
+      if (!contentWidth || contentWidth <= 0) return;
 
       if (animationRef.current) {
         animationRef.current.kill();
@@ -154,6 +158,10 @@ function MenuItem({ link, text, image, isLive = true, speed, textColor, marqueeB
       .to(marqueeInnerRef.current, { y: edge === 'top' ? '101%' : '-101%' }, 0);
   };
 
+  const safeRepetitions = Number.isFinite(repetitions) && repetitions > 0 
+    ? Math.min(Math.max(4, Math.floor(repetitions)), 20) 
+    : 4;
+
   return (
     <div className="menu__item" ref={itemRef} style={{ borderColor }}>
       <a
@@ -168,7 +176,7 @@ function MenuItem({ link, text, image, isLive = true, speed, textColor, marqueeB
       <div className="marquee" ref={marqueeRef} style={{ backgroundColor: marqueeBgColor }}>
         <div className="marquee__inner-wrap">
           <div className="marquee__inner" ref={marqueeInnerRef} aria-hidden="true">
-            {[...Array(repetitions)].map((_, idx) => (
+            {Array.from({ length: safeRepetitions }).map((_, idx) => (
               <div className="marquee__part" key={idx} style={{ color: marqueeTextColor }}>
                 <span>{text}</span>
                 <div className="marquee__img-container" style={{ position: 'relative', width: '240px', height: '135px', margin: '0 2vw', borderRadius: '1rem', overflow: 'hidden', flexShrink: 0, boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>

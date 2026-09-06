@@ -35,7 +35,7 @@ export default function NotFound() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none z-10" />
 
       {/* Content */}
-      <div className="relative z-20 flex flex-col items-start justify-center px-8 md:px-24 w-full max-w-6xl py-20">
+      <div className="relative z-20 flex flex-col items-start justify-center px-5 sm:px-8 md:px-24 w-full max-w-6xl py-16 sm:py-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -54,7 +54,7 @@ export default function NotFound() {
           </div>
 
           {/* Interactive Particle Text for 404 (White/Light on Dark Background) */}
-          <div className="relative w-[320px] h-[160px] sm:w-[400px] sm:h-[200px] md:w-[420px] md:h-[220px] mb-4 pointer-events-auto">
+          <div className="relative w-full max-w-[280px] xs:max-w-[320px] sm:max-w-[400px] md:max-w-[420px] h-[140px] sm:h-[200px] md:h-[220px] mb-4 pointer-events-auto">
             <ParticleText
               text="404"
               particleSize={2.8}

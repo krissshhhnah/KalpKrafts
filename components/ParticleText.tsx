@@ -289,6 +289,7 @@ const ParticleText: React.FC<ParticleTextProps> = ({
       canvas.height = Math.max(1, Math.floor(height * dpr));
       canvas.style.width = "100%";
       canvas.style.height = "100%";
+      canvas.style.touchAction = "pan-y";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const computed = window.getComputedStyle(container);

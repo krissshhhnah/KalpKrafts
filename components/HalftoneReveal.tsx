@@ -243,6 +243,7 @@ const HalftoneReveal = ({
     gl.canvas.style.width = '100%';
     gl.canvas.style.height = '100%';
     gl.canvas.style.display = 'block';
+    gl.canvas.style.touchAction = 'pan-y';
     container.appendChild(gl.canvas);
 
     const texture = new Texture(gl, { generateMipmaps: false });
@@ -272,12 +273,17 @@ const HalftoneReveal = ({
     const program = new Program(gl, { vertex, fragment, uniforms });
     const mesh = new Mesh(gl, { geometry: new Triangle(gl), program });
 
+    const renderOnce = () => {
+      renderer.render({ scene: mesh });
+    };
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = src;
     img.onload = () => {
       texture.image = img;
       uniforms.uImageSize.value = [img.naturalWidth, img.naturalHeight];
+      renderOnce();
     };
 
     const resize = () => {
@@ -285,26 +291,40 @@ const HalftoneReveal = ({
       const h = container.clientHeight || 1;
       renderer.setSize(w, h);
       uniforms.iResolution.value = [gl.canvas.width, gl.canvas.height];
+      renderOnce();
     };
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(container);
+
+    let isIntersecting = true;
+    let isLooping = false;
 
     const onMove = (e: PointerEvent) => {
       const rect = container.getBoundingClientRect();
       mouseRef.current.x = (e.clientX - rect.left) / rect.width;
       mouseRef.current.y = 1 - (e.clientY - rect.top) / rect.height;
       mouseRef.current.target = reduced ? 0 : 1;
+      if (!isLooping && isIntersecting && trigger !== 'off') {
+        startLoop();
+      }
     };
     const onLeave = () => {
       mouseRef.current.target = 0;
     };
     container.addEventListener('pointermove', onMove, { passive: true });
+    container.addEventListener('pointerdown', onMove, { passive: true });
     container.addEventListener('pointerenter', onMove, { passive: true });
     container.addEventListener('pointerleave', onLeave, { passive: true });
+    container.addEventListener('pointerup', onLeave, { passive: true });
+    container.addEventListener('pointercancel', onLeave, { passive: true });
 
     let prev = performance.now();
     const loop = (now: number) => {
+      if (!isIntersecting) {
+        isLooping = false;
+        return;
+      }
       rafRef.current = requestAnimationFrame(loop);
       const dt = Math.min(0.05, Math.max(0.001, (now - prev) / 1000));
       prev = now;
@@ -321,15 +341,54 @@ const HalftoneReveal = ({
       uniforms.uActivity.value = m.active;
 
       renderer.render({ scene: mesh });
+
+      // If trigger is off or mouse returned to idle and activity settled, we can pause the loop to save battery
+      if (trigger === 'off' || (Math.abs(m.active - m.target) < 0.001 && m.target === 0 && Math.abs(m.sx - m.x) < 0.001)) {
+        if (trigger === 'off') {
+          cancelAnimationFrame(rafRef.current!);
+          isLooping = false;
+        }
+      }
     };
-    rafRef.current = requestAnimationFrame(loop);
+
+    const startLoop = () => {
+      if (isLooping) return;
+      isLooping = true;
+      prev = performance.now();
+      rafRef.current = requestAnimationFrame(loop);
+    };
+
+    const io = new IntersectionObserver(([entry]) => {
+      isIntersecting = entry.isIntersecting;
+      if (isIntersecting) {
+        if (trigger !== 'off') {
+          startLoop();
+        } else {
+          renderOnce();
+        }
+      } else {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        isLooping = false;
+      }
+    }, { threshold: 0.05 });
+    io.observe(container);
+
+    if (trigger !== 'off') {
+      startLoop();
+    } else {
+      renderOnce();
+    }
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       ro.disconnect();
+      io.disconnect();
       container.removeEventListener('pointermove', onMove);
+      container.removeEventListener('pointerdown', onMove);
       container.removeEventListener('pointerenter', onMove);
       container.removeEventListener('pointerleave', onLeave);
+      container.removeEventListener('pointerup', onLeave);
+      container.removeEventListener('pointercancel', onLeave);
       const ext = gl.getExtension('WEBGL_lose_context');
       if (ext) ext.loseContext();
       if (gl.canvas.parentNode) gl.canvas.parentNode.removeChild(gl.canvas);

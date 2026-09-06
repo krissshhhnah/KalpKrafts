@@ -113,6 +113,33 @@
 @media (max-width: 599px) {
   .card-grid {
     grid-template-columns: 1fr;
+    gap: 0.875rem;
+  }
+
+  .magic-bento-card {
+    min-height: auto;
+    padding: 1.35rem;
+    border-radius: 16px;
+    border-color: rgba(38, 135, 232, 0.25);
+  }
+
+  .magic-bento-card__header {
+    margin-bottom: 1.25rem;
+  }
+
+  .magic-bento-card__title {
+    font-size: 1.15rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .magic-bento-card__description {
+    font-size: 0.825rem;
+    line-height: 1.55;
+  }
+
+  .magic-bento-card:active {
+    border-color: #2687E8;
+    transform: scale(0.99);
   }
 }
 
